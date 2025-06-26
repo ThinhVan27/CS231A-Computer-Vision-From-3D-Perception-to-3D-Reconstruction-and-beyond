@@ -31,7 +31,8 @@ class StereoRandomFlip:
     def _flip(self, left_image, right_image):
         # Use `self.transform` to flip the image horizontally.
 
-        raise NotImplementedError
+        flipped_left_image = self.transform(left_image)
+        flipped_right_image = self.transform(right_image)
 
         return flipped_left_image, flipped_right_image
 
@@ -88,8 +89,16 @@ More technically,
 
 
 def bilinear_sampler(img, disp):
-    raise NotImplementedError
-    return output
+  batch_size, C, H, W = img.shape
+  
+  Y, X = torch.meshgrid(torch.linspace(-1.0,1.0,H), torch.linspace(-1.0,1.0,W), indexing='ij')
+
+  grid = torch.stack((X, Y), axis=-1)
+  grid = grid.unsqueeze(0).repeat(batch_size,1,1,1)
+
+  grid[...,0] += disp[:,0,:,:]*2
+  output = F.grid_sample(input=img, grid=grid, padding_mode='border', mode='bilinear', align_corners=True)
+  return output
 
 
 """
@@ -113,12 +122,12 @@ Output:
 
 
 def generate_image_right(img, disp):
-    raise NotImplementedError
+    output = bilinear_sampler(img, disp)
     return output
 
 
 def generate_image_left(img, disp):
-    raise NotImplementedError
+    output = bilinear_sampler(img, -1.0*disp)
     return output
 
 
